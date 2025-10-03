@@ -34,7 +34,7 @@ A React-based web application for building custom PCs by selecting components li
 git clone https://github.com/your-username/pc-builder.git
 cd pc-builder
 ````
-
+````
 2. Install dependencies:
 
 ```bash
@@ -106,6 +106,7 @@ Add any API keys or environment-specific variables in a `.env` file:
 This project is licensed under the MIT License.
 
 ---
+
 
 
 
