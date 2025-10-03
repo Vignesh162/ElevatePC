@@ -1,4 +1,4 @@
-﻿````markdown
+﻿
 # ElevatePC (Custom PC Builder Web App)
 
 A React-based web application for building custom PCs by selecting components like CPUs, GPUs, RAM, Storage, and more. Users can view detailed product information and add components to their build.
@@ -31,7 +31,6 @@ A React-based web application for building custom PCs by selecting components li
 
 1. Clone the repository:
 
-```bash
 git clone https://github.com/your-username/pc-builder.git
 cd pc-builder
 ````
@@ -107,5 +106,6 @@ Add any API keys or environment-specific variables in a `.env` file:
 This project is licensed under the MIT License.
 
 ---
+
 
 
