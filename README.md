@@ -1,6 +1,6 @@
 ---
 
-# 🚀 ElevatePC
+# 🖥️ ElevatePC
 
 A full-stack application for **custom PC building, product management, and e-commerce functionality**.
 Built with **Node.js + Express + PostgreSQL** for the backend and **React** for the frontend.
@@ -185,9 +185,11 @@ REACT_APP_API_URL=http://localhost:4000/api
 
 ## 📌 Todo
 
-* [ ] Payment integration (Stripe/PayPal)
+* [ ] Mobile responsiveness 
+* [ ] Order Page
+* [ ] Order history
 * [ ] Build recommendations with compatibility checks
 * [ ] Wishlist feature
-* [ ] Order history
+* [ ] Payment integration (Stripe/PayPal)
 
 ---
