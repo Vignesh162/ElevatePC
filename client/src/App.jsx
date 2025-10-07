@@ -7,6 +7,8 @@ import PcBuilderPage from './pages/pcBuilder';
 import ProductDescriptionPage from './pages/productDescriptionPage';
 import { BuildProvider } from './contexts/buildContext';
 import CartPage from './pages/cartPage';
+import AdminPage from './pages/AdminPage';
+import AuthPage from './pages/authPage';
 function App() {
   const [count, setCount] = useState(0)
 
@@ -17,11 +19,16 @@ function App() {
           <Routes>
             <Route path = "/">
               <Route index element={<Home></Home>}/>
+              <Route path="LoginPage" element={<AuthPage></AuthPage>}></Route>
               <Route path="AllProductsPage" element={<AllProductsPage></AllProductsPage>}/>
               <Route path="PCBuilderPage" element={<PcBuilderPage></PcBuilderPage>}/>
               <Route path="Product/:id" element={<ProductDescriptionPage></ProductDescriptionPage>}/>
               <Route path="CartPage" element={<CartPage></CartPage>}/>
-            </Route> 
+            </Route>
+            {/* Admin Routes */}
+            <Route path = "/">
+              <Route path="AdminPage" element={<AdminPage></AdminPage>}/>
+            </Route>
           </Routes>
         </BuildProvider>
     </BrowserRouter>
