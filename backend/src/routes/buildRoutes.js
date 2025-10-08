@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 // Get All builds 
-router.get("/all",authenticateToken, authorizeRoles("admin"), getAllBuilds);
+router.get("/",authenticateToken, authorizeRoles("admin"), getAllBuilds);
 
 // Get User build
 router.get("/user", authenticateToken, getUserBuilds);

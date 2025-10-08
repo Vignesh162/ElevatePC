@@ -8,8 +8,8 @@ const router = express.Router();
  * GET /cart/:userId
  * Fetch user's cart with product details
  */
-router.get("/:userId", authenticateToken, async (req, res) => {
-  const userId = parseInt(req.params.userId, 10);
+router.get("/", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
   if (!userId || isNaN(userId)) {
     return res.status(400).json({ error: "Invalid user ID" });
   }
@@ -53,9 +53,9 @@ router.get("/:userId", authenticateToken, async (req, res) => {
  * PUT /cart/:userId
  * Update entire cart
  */
-router.put("/:userId/update", authenticateToken, async (req, res) => {
+router.put("/update", authenticateToken, async (req, res) => {
   const { cartItems } = req.body; // [{ product_id, quantity }]
-  const userId = parseInt(req.params.userId, 10);
+  const userId = req.user.id;
 
   if (!userId || isNaN(userId)) {
     return res.status(400).json({ error: "Invalid user ID" });
@@ -104,9 +104,9 @@ router.put("/:userId/update", authenticateToken, async (req, res) => {
  * POST /cart/:userId/add
  * Add single product to cart
  */
-router.post("/:userId/add", authenticateToken, async (req, res) => {
+router.post("/add", authenticateToken, async (req, res) => {
   const { product_id, quantity } = req.body;
-  const userId = parseInt(req.params.userId, 10);
+  const userId = req.user.id;
 
   if (!userId || isNaN(userId)) return res.status(400).json({ error: "Invalid user ID" });
 
@@ -138,8 +138,8 @@ router.post("/:userId/add", authenticateToken, async (req, res) => {
  * DELETE /cart/:userId/remove/:productId
  * Remove single product
  */
-router.delete("/:userId/remove/:productId", authenticateToken, async (req, res) => {
-  const userId = parseInt(req.params.userId, 10);
+router.delete("/remove/:productId", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
   const productId = parseInt(req.params.productId, 10);
 
   if (!userId || isNaN(userId) || !productId || isNaN(productId)) {
