@@ -77,6 +77,14 @@ export function BuildProvider({ children }) {
     ]);
     setCurrentBuildId(newId);
   };
+  const updateBuildName = (buildId, name) => {
+    setBuilds(prev => prev.map(b => b.id === buildId ? { ...b, name } : b));
+  };
+
+  const updateBuildStatus = (buildId, status) => {
+    setBuilds(prev => prev.map(b => b.id === buildId ? { ...b, status } : b));
+  };
+
 
   // Add/replace product in the current build
   const addProduct = (category, product) => {
@@ -96,6 +104,26 @@ export function BuildProvider({ children }) {
     }
   };
 
+  // Delete a build
+  const deleteBuild = (id) => {
+    setBuilds((prev) => {
+      const updated = prev.filter((b) => b.id !== id);
+
+      // If the deleted build was the current one, reset to another
+      if (id === currentBuildId) {
+        if (updated.length > 0) {
+          setCurrentBuildId(updated[0].id);
+        } else {
+          // No builds left, reset completely
+          setCurrentBuildId(null);
+          return [];
+        }
+      }
+      return updated;
+    });
+  };
+
+
   const addProductToCart = (product) => {
     setCart((prevItems) => {
       if (prevItems.some((item) => item.id === product.id)) {
@@ -114,6 +142,9 @@ export function BuildProvider({ children }) {
         setCurrentBuildId,
         addNewBuild,
         addProduct,
+        deleteBuild,
+        updateBuildName,
+        updateBuildStatus,
         cart,
         addProductToCart,
       }}

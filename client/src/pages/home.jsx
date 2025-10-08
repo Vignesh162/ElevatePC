@@ -2,6 +2,7 @@ import { useState } from "react";
 import PcCard from "../components/pcCard";
 import BenefitCard from "../components/benefitsCard";
 import FAQAccordion from "../components/faqAccordion";
+import Footer from "../components/footer";
 export default function Home() {
     const [activeFAQindex, setActiveFAQindex] = useState(null);
     const benefits = [
@@ -154,6 +155,7 @@ export default function Home() {
             <section id="contact" className="scroll-mt-[10vh] w-[100%] mx-auto min-h-[90vh] bg-black ">
                 <FAQAccordion></FAQAccordion>
             </section>
+            <Footer></Footer>
         </>
     )
 }
