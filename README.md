@@ -179,7 +179,7 @@ REACT_APP_API_URL=http://localhost:4000/api
 * **Frontend**: React, TailwindCSS, Axios
 * **Backend**: Node.js, Express, JWT, bcrypt
 * **Database**: PostgreSQL (Neon)
-* **Tools**: Git, Postman, pgAdmin
+* **Tools**: Git, Postman, pgAdmin  
 
 ---
 
@@ -192,4 +192,5 @@ REACT_APP_API_URL=http://localhost:4000/api
 * [ ] Wishlist feature
 * [ ] Payment integration (Stripe/PayPal)
 
----
+--- 
+    
