@@ -3,7 +3,7 @@ import { BuildContext } from "../contexts/buildContext";
 
 export default function CartPage() {
   const { builds, currentBuildId, cart } = useContext(BuildContext);
-
+  console.log(cart);
   // Find the currently selected build
   const currentBuild = builds.find((b) => b.id === currentBuildId);
 
@@ -24,9 +24,9 @@ export default function CartPage() {
         {/* Image Container */}
         <div className="relative flex-shrink-0">
           <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center overflow-hidden">
-            {product?.image ? (
+            {product?.images.length>0 ? (
               <img
-                src={product.image}
+                src={product.images[0]}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
