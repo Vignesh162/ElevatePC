@@ -1,12 +1,13 @@
 import { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BuildContext } from "../contexts/buildContext";
-
+import { AuthContext } from "../contexts/authContext";
 import { Menu, X } from "lucide-react";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 
 export default function Navbar() {
-  const [loggedIn, setLoggedIn] = useState(true);
+  // const [loggedIn, setLoggedIn] = useState(true);
+  const { user, token, logout} = useContext(AuthContext);
   const { cart } = useContext(BuildContext);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -46,6 +47,7 @@ export default function Navbar() {
           <Link to="/" className="text-gray-200 hover:text-blue-500 transition">Home</Link>
           <Link to="/PCBuilderPage" className="text-gray-200 hover:text-blue-500 transition">Build</Link>
           <Link to="/AllProductsPage" className="text-gray-200 hover:text-blue-500 transition">Shop All</Link>
+          { user?.role === "admin" ?<Link to="/Admin/Dashboard" className="text-gray-200 hover:text-blue-500 transition">Admin Dashboard</Link>:""}
           {/* <Link to="" className="text-gray-200 hover:text-blue-500 transition">About</Link>
           <Link to="" className="text-gray-200 hover:text-blue-500 transition">Contact</Link> */}
           <button
@@ -63,7 +65,7 @@ export default function Navbar() {
             }
             className="text-gray-200 hover:text-blue-500 transition"
           >
-            Contact
+            Contact Us
           </button>
         </div>
 
@@ -77,8 +79,8 @@ export default function Navbar() {
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
 
-          {loggedIn ? (
-            <div className="flex flex-row items-center space-x-2">
+          {user ? (
+            <div className="flex flex-row items-center space-x-3">
               {/* Right Cart Icon */}
               <div className="relative mr-5">
                 <Link to="/CartPage">
@@ -93,11 +95,14 @@ export default function Navbar() {
                 )}
               </div>
               <img className="h-[30px] bg-black" src="/images/login profile icon.png" alt="profile" />
-              <h2 className="text-gray-200">Vignesh Pai</h2>
+              <h2 className="text-gray-200">{user?.name || "xyz"}</h2>
+              <button  onClick={logout} className="w-18 h-9 ml-2 rounded-xl bg-red-500">Logout</button>
             </div>
           ) : (
             <div className="flex items-center">
-              <a href="#" className="text-lg text-gray-200 hover:text-blue-600 transition">Login</a>
+              <Link to="/LoginPage" className="text-lg text-gray-200 hover:text-blue-600 transition">
+                <button class="w-20 h-10 ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold  rounded-xl">Login</button>
+              </Link>
             </div>
           )}
         </div>
