@@ -1,23 +1,56 @@
 // components/ProductCard.jsx
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 export default function ProductCard({ product }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
+
   const handleView = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    // Handle add to cart logic here
-    navigate(`/Product/${product.id}`);
-  }
-  const defaultImage = "https://unsplash.com/photos/circuit-board-technology-background-central-computer-processors-cpu-concept-motherboard-digital-chip-tech-science-background-integrated-communication-processor-3d-illustration-kdsISo8KeBkhttps://plus.unsplash.com/premium_photo-1681426698212-53e47fec9a2c?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3Dhttps://www.shutterstock.com/image-vector/no-photo-thumbnail-graphic-element-600nw-2311073121.jpg";
+    navigate(`/product/${product.id}`, {
+      state: {
+        product,
+        from: 'all-products',
+        timestamp: new Date().toISOString()
+      }
+    });
+  };
+
+  const handleCardClick = (e) => {
+    // If the click is on the button, let handleView handle it
+    if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+      return;
+    }
+    
+    e.preventDefault();
+    navigate(`/product/${product.id}`, {
+      state: {
+        product,
+        from: 'all-products',
+        timestamp: new Date().toISOString()
+      }
+    });
+  };
+
+  // Fixed default image URL
+  const defaultImage = "https://images.unsplash.com/photo-1518709268805-4e9042af2176?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+  
+  // Get first image or default, ensure images array exists
+  const productImage = product.images && product.images.length > 0 
+    ? product.images[0] 
+    : defaultImage;
+
+  // Convert price to number for formatting
+  const price = parseFloat(product.price) || 0;
+  const originalPrice = product.originalPrice ? parseFloat(product.originalPrice) : null;
 
   return (
-    <Link 
-      to={`/Product/${product.id}`}
-      className="bg-gray-900 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden group"
+    <div 
+      onClick={handleCardClick}
+      className="bg-gray-900 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden group cursor-pointer"
     >
       {/* Product Image */}
       <div className="relative overflow-hidden bg-gray-100 h-56">
@@ -27,7 +60,7 @@ export default function ProductCard({ product }) {
           </div>
         )}
         <img 
-          src={imageError ? defaultImage : product.image}
+          src={imageError ? defaultImage : productImage}
           alt={product.name}
           className={`w-full h-56 object-contain transition-all duration-300 ${
             imageLoaded ? 'group-hover:scale-105 opacity-100' : 'opacity-0'
@@ -45,19 +78,25 @@ export default function ProductCard({ product }) {
         
         {/* Price */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-2xl font-bold text-white opacity-80">₹{product.price.toLocaleString()}</span>
-          {product.originalPrice && (
-            <span className="text-sm text-gray-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
+          <span className="text-2xl font-bold text-white opacity-80">
+            ₹{price.toLocaleString('en-IN')}
+          </span>
+          {originalPrice && (
+            <span className="text-sm text-gray-500 line-through">
+              ₹{originalPrice.toLocaleString('en-IN')}
+            </span>
           )}
         </div>
 
         {/* Rating */}
         <div className="flex items-center mb-3">
           <div className="flex text-yellow-400">
-            {"★".repeat(Math.floor(product.rating))}
-            {"☆".repeat(5 - Math.floor(product.rating))}
+            {"★".repeat(Math.floor(product.rating || 0))}
+            {"☆".repeat(5 - Math.floor(product.rating || 0))}
           </div>
-          <span className="text-sm text-gray-600 ml-2">({product.reviews})</span>
+          <span className="text-sm text-gray-600 ml-2">
+            ({product.reviews || 0})
+          </span>
         </div>
 
         {/* View Product Button */}
@@ -68,6 +107,6 @@ export default function ProductCard({ product }) {
           View Product
         </button>
       </div>
-    </Link>
+    </div>
   );
 }
