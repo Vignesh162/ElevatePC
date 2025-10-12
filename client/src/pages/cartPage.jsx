@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
+import { Link } from "react-router-dom";
 import { BuildContext } from "../contexts/buildContext";
 
 export default function CartPage() {
   const { builds, currentBuildId, cart } = useContext(BuildContext);
-  console.log(cart);
   // Find the currently selected build
   const currentBuild = builds.find((b) => b.id === currentBuildId);
 
@@ -142,10 +142,14 @@ export default function CartPage() {
                 ))}
               </div>
 
+              {/* Build Section Checkout Button */}
               <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                <ActionButton onClick={(e)=>{ e.preventDefault(); alert("Redirecting to checkout page");}} variant="primary">
-                  Buy This Build
-                </ActionButton>
+                <Link 
+                  to="/CheckoutPage" 
+                  className="px-8 py-4 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-center"
+                >
+                  Checkout Build - ₹{buildTotal}
+                </Link>
               </div>
             </section>
           )}
@@ -181,9 +185,12 @@ export default function CartPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-end">
-                  <ActionButton onClick={(e)=>{ e.preventDefault(); alert("Redirecting to checkout page");}} variant="secondary">
-                    Buy Cart Products
-                  </ActionButton>
+                  <Link 
+                    to="/CheckoutPage" 
+                    className="px-8 py-4 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-center"
+                  >
+                    Checkout Products - ₹{cartTotal}
+                  </Link>
                 </div>
               </>
             ) : (

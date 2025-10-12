@@ -11,6 +11,7 @@ import AdminPage from './pages/AdminPage';
 import AuthPage from './pages/authPage';
 import RouteGroup from './components/routeGroup';
 import ScrollToTop from './components/scrollToTop';
+import CheckoutPage from './pages/checkoutPage';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -35,6 +36,7 @@ function App() {
                 <Routes>
                   <Route path="PCBuilderPage" element={<PcBuilderPage />} />
                   <Route path="CartPage" element={<CartPage />} />
+                  <Route path="CheckoutPage" element={<CheckoutPage></CheckoutPage>}/>
                 </Routes>
               </RouteGroup>
             } 
