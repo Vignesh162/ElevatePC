@@ -9,28 +9,50 @@ import { BuildProvider } from './contexts/buildContext';
 import CartPage from './pages/cartPage';
 import AdminPage from './pages/AdminPage';
 import AuthPage from './pages/authPage';
+import RouteGroup from './components/routeGroup';
+import ScrollToTop from './components/scrollToTop';
+
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <BrowserRouter>
-        <BuildProvider>
-          <Navbar></Navbar>
-          <Routes>
-            <Route path = "/">
-              <Route index element={<Home></Home>}/>
-              <Route path="LoginPage" element={<AuthPage></AuthPage>}></Route>
-              <Route path="AllProductsPage" element={<AllProductsPage></AllProductsPage>}/>
-              <Route path="PCBuilderPage" element={<PcBuilderPage></PcBuilderPage>}/>
-              <Route path="Product/:id" element={<ProductDescriptionPage></ProductDescriptionPage>}/>
-              <Route path="CartPage" element={<CartPage></CartPage>}/>
-            </Route>
-            {/* Admin Routes */}
-            <Route path = "/">
-              <Route path="AdminPage" element={<AdminPage></AdminPage>}/>
-            </Route>
-          </Routes>
-        </BuildProvider>
+      <ScrollToTop></ScrollToTop>    
+      <BuildProvider>
+        <Navbar />
+        <Routes>
+
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/LoginPage" element={<AuthPage />} />
+          <Route path="/AllProductsPage" element={<AllProductsPage />} />
+          <Route path="Product/:id" element={<ProductDescriptionPage />} />
+          {/* Protected Routes Group - All routes here require authentication */}
+          <Route 
+            path="/*" 
+            element={
+              <RouteGroup allowedRoles={["user", "admin"]}>
+                <Routes>
+                  <Route path="PCBuilderPage" element={<PcBuilderPage />} />
+                  <Route path="CartPage" element={<CartPage />} />
+                </Routes>
+              </RouteGroup>
+            } 
+          />
+          
+          {/* Admin Only Routes Group */}
+          <Route 
+            path="/Admin/*" 
+            element={
+              <RouteGroup allowedRoles={["admin"]}>
+                <Routes>
+                  <Route path="Dashboard" element={<AdminPage />} />
+                </Routes>
+              </RouteGroup>
+            } 
+          />
+        </Routes>
+      </BuildProvider>
     </BrowserRouter>
   )
 }

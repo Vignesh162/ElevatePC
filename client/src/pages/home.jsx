@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useContext} from "react";
 import PcCard from "../components/pcCard";
 import BenefitCard from "../components/benefitsCard";
 import FAQAccordion from "../components/faqAccordion";
 import Footer from "../components/footer";
+import { Link } from "react-router-dom";
+import { AuthContext } from "../contexts/authContext";
 export default function Home() {
     const [activeFAQindex, setActiveFAQindex] = useState(null);
+    const {user} = useContext(AuthContext);
     const benefits = [
     {
       title: "Tailored Performance",
@@ -42,7 +45,7 @@ export default function Home() {
                 <div className="flex flex-col w-[100vw] md:w-[50vw] text-white items-center text-left">
                     <h1 className="text-7xl font-bold max-w-[400px] mt-20">Build Your Own PC</h1>
                     <p className=" max-w-[400px] mt-6 font-semibold opacity-80">​Build your dream rig—without the guesswork. Mix and match the latest CPUs, GPUs, and storage, and our compatibility checker keeps everything snap-together simple.</p>
-                    <button className="w-[150px] h-[50px] font-semibold bg-black rounded-2xl mt-10 border-2 border-amber-50 hover:bg-blue-500 hover:text-black">Get Started</button>
+                    <Link to={user?`/PCBuilderPage`:`/LoginPage`}><button className="w-[150px] h-[50px] font-semibold bg-black rounded-2xl mt-10 border-2 border-amber-50 hover:bg-blue-500 hover:text-black">Get Started</button></Link>
                 </div>
                 <div
                 className="hidden md:flex h-[80vh] w-[50vw] rounded-2xl bg-[url(/images/elevatePC-home-background.jpg)] bg-cover bg-center">
@@ -152,10 +155,13 @@ export default function Home() {
             </section>
 
             {/* FAQ Section */}
-            <section id="contact" className="scroll-mt-[10vh] w-[100%] mx-auto min-h-[90vh] bg-black ">
+            <section  className="scroll-mt-[10vh] w-[100%] mx-auto min-h-[90vh] bg-black ">
                 <FAQAccordion></FAQAccordion>
             </section>
-            <Footer></Footer>
+            <div id="contact"> 
+                <Footer></Footer>
+            </div>
+
         </>
     )
 }

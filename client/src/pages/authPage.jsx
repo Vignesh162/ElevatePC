@@ -1,7 +1,7 @@
 // pages/AuthPage.jsx
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { AuthContext } from "../contexts/authContext";
 /**
  * AuthPage
  * - Tabbed Login / Register UI
@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const { user, token, login, logout, register } = useContext(AuthContext);
   const [tab, setTab] = useState("login"); // 'login' or 'register'
 
   // Login state
@@ -28,21 +29,10 @@ export default function AuthPage() {
   const [regConfirm, setRegConfirm] = useState("");
   const [regError, setRegError] = useState("");
 
-  // Simple helpers
-  const getUsers = () => {
-    try {
-      return JSON.parse(localStorage.getItem("users") || "[]");
-    } catch {
-      return [];
-    }
-  };
-
-  const saveUsers = (users) => {
-    localStorage.setItem("users", JSON.stringify(users));
-  };
+ 
 
   // LOGIN
-  const handleLogin = (e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
     setLoginError("");
 
@@ -51,24 +41,16 @@ export default function AuthPage() {
       return;
     }
 
-    const users = getUsers();
-    const user = users.find(
-      (u) => u.email.toLowerCase() === loginEmail.toLowerCase() && u.password === loginPassword
-    );
-
-    if (!user) {
-      setLoginError("Invalid credentials. Please check email/password.");
-      return;
+    try{
+      await login(loginEmail,loginPassword);
+    }catch(err){
+      console.error(err);
+      setLoginError(`Unable to Login, error message:${err}`);
     }
-
-    // Save "currentUser" (simple)
-    localStorage.setItem("currentUser", JSON.stringify(user));
-    // Navigate to builder page (or dashboard)
-    navigate("/PCBuilderPage");
   };
 
   // REGISTER
-  const handleRegister = (e) => {
+  const handleRegister = async(e) => {
     e.preventDefault();
     setRegError("");
 
@@ -83,8 +65,8 @@ export default function AuthPage() {
       return;
     }
 
-    if (regPassword.length < 6) {
-      setRegError("Password must be at least 6 characters.");
+    if (regPassword.length < 4) {
+      setRegError("Password must be at least 4 characters.");
       return;
     }
 
@@ -93,29 +75,20 @@ export default function AuthPage() {
       return;
     }
 
-    const users = getUsers();
-    if (users.some((u) => u.email.toLowerCase() === regEmail.toLowerCase())) {
-      setRegError("An account with this email already exists.");
-      return;
+    try{
+      await register(name,regEmail,regPassword);
+    }catch(err){
+      console.error(err);
+      setRegError(`Unable to Register error:${err}`);
     }
-
-    const newUser = {
-      id: Date.now(),
-      name: name.trim(),
-      email: regEmail.trim().toLowerCase(),
-      password: regPassword, // in prod: hash it!
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    // auto-login / set currentUser
-    localStorage.setItem("currentUser", JSON.stringify(newUser));
-
-    // redirect to address page to collect address
-    navigate("/address");
   };
+  // Navigate when user is authenticated
+  React.useEffect(() => {
+    if (user && token) {
+      navigate("/PCBuilderPage");
+    }
+  }, [user, token, navigate]);
+
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
