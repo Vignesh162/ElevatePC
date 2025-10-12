@@ -2,13 +2,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { BuildContext } from "../contexts/buildContext";
-import productsData from "../components/productsData";
+import { AuthContext } from "../contexts/authContext";
+import { useLocation } from 'react-router-dom';
+
+//import productsData from "../components/productsData";
 
 export default function ProductDescriptionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addProduct, currentBuildId, addProductToCart } = useContext(BuildContext);
-  const product = productsData.find((p) => p.id === parseInt(id));
+  const {user} = useContext(AuthContext);
+  const {product} = location.state || {};
+  //console.log(product);
+  //const product = productsData.find((p) => p.id === parseInt(id));
 
   if (!product) {
     return <div className="p-6 text-white">Product not found</div>;
@@ -29,14 +36,21 @@ export default function ProductDescriptionPage() {
     addProduct(category, product);
 
     if (currentBuildId) {
+      if(!user){
+        navigate("/LoginPage");
+        return;
+      }
       navigate("/PCBuilderPage");
     } else {
       navigate("/cart");
     }
   };
   const handleAddToCart = () => {
-    
-    addProductToCart(product);
+    if(!user){ 
+      navigate("/LoginPage");
+      return;
+    }
+      addProductToCart(product);
     alert("Product Added To Cart Successfully")
   };
 
@@ -53,7 +67,7 @@ export default function ProductDescriptionPage() {
         {/* Product Image */}
         <div className="flex justify-center lg:w-1/3">
           <img
-            src={product.image}
+            src={product.images[0]}
             alt={product.name}
             className="w-72 h-72 lg:w-90 lg:h-90 object-contain rounded-xl shadow-md shadow-black/40"
           />
