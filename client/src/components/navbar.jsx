@@ -30,7 +30,11 @@ export default function Navbar() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
+  const navigate = useNavigate();
+  const handleNavigateAndScroll = (sectionId) => {
+    navigate("/", { state: { scrollTo: sectionId } });
+  };
+  
   return (
     <nav className={`sticky w-full z-20 top-0 left-0 transition-colors duration-300 ${
       isScrolled ? "bg-gray-900" : "bg-black"
@@ -51,18 +55,14 @@ export default function Navbar() {
           {/* <Link to="" className="text-gray-200 hover:text-blue-500 transition">About</Link>
           <Link to="" className="text-gray-200 hover:text-blue-500 transition">Contact</Link> */}
           <button
-            onClick={() =>
-              document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
-            }
+            onClick={() => handleNavigateAndScroll("about")}
             className="text-gray-200 hover:text-blue-500 transition"
           >
             About
           </button>
 
           <button
-            onClick={() =>
-              document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" })
-            }
+            onClick={() => handleNavigateAndScroll("contact")}
             className="text-gray-200 hover:text-blue-500 transition"
           >
             Contact Us
