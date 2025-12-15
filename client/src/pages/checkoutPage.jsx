@@ -9,7 +9,6 @@ export default function CheckoutPage() {
   
   // Find the currently selected build
   const currentBuild = builds.find((b) => b.id === currentBuildId);
-
   // Calculate build total
   const buildTotal = currentBuild
     ? Object.values(currentBuild.components)
@@ -168,11 +167,12 @@ export default function CheckoutPage() {
                 <div className="mb-4">
                   <h3 className="font-semibold text-gray-300 mb-2">PC Build</h3>
                   <div className="space-y-2 text-sm">
-                    {Object.entries(currentBuild.components).map(([category, component]) => (
-                      component && (
+                    {currentBuild.components.map(({category, name, price}) => (
+                      name && (
                         <div key={category} className="flex justify-between">
-                          <span className="text-gray-400 capitalize">{category}:</span>
-                          <span>₹{component.price}</span>
+                          {/* <span className="text-gray-400 capitalize">{category}:</span> */}
+                          <span className="text-gray-400 capitalize">{`${category}: ${name}`}</span>
+                          <span>₹{price}</span>
                         </div>
                       )
                     ))}
@@ -190,7 +190,7 @@ export default function CheckoutPage() {
                   <h3 className="font-semibold text-gray-300 mb-2">Individual Products</h3>
                   <div className="space-y-2 text-sm">
                     {cart.map((item, idx) => (
-                      <div key={idx} className="flex justify-between">
+                      <div key={idx+1} className="flex justify-between">
                         <span className="text-gray-400 truncate max-w-[120px]">{item.name}</span>
                         <span>₹{item.price * (item.quantity || 1)}</span>
                       </div>
