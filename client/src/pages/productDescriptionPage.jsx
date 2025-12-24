@@ -11,16 +11,14 @@ export default function ProductDescriptionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addProduct, currentBuildId, addProductToCart } = useContext(BuildContext);
+  const { addProductToBuild, currentBuildId, addProductToCart } = useContext(BuildContext);
   const {user} = useContext(AuthContext);
   const {product} = location.state || {};
-  //console.log(product);
-  //const product = productsData.find((p) => p.id === parseInt(id));
 
   if (!product) {
     return <div className="p-6 text-white">Product not found</div>;
   }
-
+  console.log(product);
   const handleAdd = () => {
     let category = product.category.toLowerCase();
     if (category.includes("cpu")) category = "cpu";
@@ -33,7 +31,7 @@ export default function ProductDescriptionPage() {
     if (category.includes("case")) category = "case";
     if (category.includes("cooler")) category = "cooler";
 
-    addProduct(category, product);
+    addProductToBuild(currentBuildId, product, category);
 
     if (currentBuildId) {
       if(!user){

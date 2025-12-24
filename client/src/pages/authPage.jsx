@@ -8,8 +8,6 @@ import { AuthContext } from "../contexts/authContext";
  * - Register stores user in localStorage under "users" (simple demo)
  * - On successful register, navigates to /address to collect address
  * - On login, checks against stored users
- *
- * Note: Replace localStorage logic with real API calls in production.
  */
 
 export default function AuthPage() {

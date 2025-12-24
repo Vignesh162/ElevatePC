@@ -6,6 +6,11 @@ import ProductSidebar from "../components/productSidebar";
 import axios from "axios";
 
 export default function AllProductsPage() {
+  const LIMIT = 20;
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sortBy, setSortBy] = useState("featured");
@@ -26,29 +31,66 @@ export default function AllProductsPage() {
     category: categoryFromUrl,
     buildId: buildIdFromUrl
   });
-
+ 
   // Track if it's the initial load to prevent scroll on first render
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Fetch products
   useEffect(() => {
-    getProducts();
+     getProducts(true);
   }, []);
+    // When category / filters change, reset pagination:
+    useEffect(() => {
+    setOffset(0);
+    setHasMore(true);
+    getProducts(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [filters.category, sortBy]);
+//   const getProducts = async (reset=false) => {
+//     try {
+//       const response = await axios.get(`${backendApiUrl}/products?limit=20`);
+//       const productsData = response.data.products || response.data || [];
+//       console.log(productsData);
+//       if (productsData.length > 0) {
+//         setProducts(productsData);
+//         setFilteredProducts(productsData);
+//       }
+//     } catch (err) {
+//       console.error("Error fetching products:", err);
+//     }
+//   };
+    const getProducts = async (reset = false) => {
+    if (loading) return;
 
-  const getProducts = async () => {
     try {
-      const response = await axios.get(`${backendApiUrl}/products/`);
-      const productsData = response.data.products || response.data || [];
-      
-      if (productsData.length > 0) {
-        setProducts(productsData);
-        setFilteredProducts(productsData);
-      }
-    } catch (err) {
-      console.error("Error fetching products:", err);
-    }
-  };
+        setLoading(true);
 
+        const response = await axios.get(`${backendApiUrl}/products`, {
+        params: {
+            limit: LIMIT,
+            offset: reset ? 0 : offset,
+            category: filters.category !== "All Products" ? filters.category : undefined
+        }
+        });
+
+        const { products: newProducts, meta } = response.data;
+
+        setProducts(prev =>
+        reset ? newProducts : [...prev, ...newProducts]
+        );
+
+        setFilteredProducts(prev =>
+        reset ? newProducts : [...prev, ...newProducts]
+        );
+
+        setOffset(prev => prev + LIMIT);
+        setHasMore(meta.hasMore);
+    } catch (err) {
+        console.error("Error fetching products:", err);
+    } finally {
+        setLoading(false);
+    }
+    };
   // Enhanced scroll to top function
   const scrollToTop = () => {
     // Get the header element to account for fixed headers
@@ -65,21 +107,21 @@ export default function AllProductsPage() {
   };
 
   // Alternative: Scroll to a specific element by ID
-  const scrollToElement = (elementId, offset = 0) => {
-    const element = document.getElementById(elementId);
-    if (element) {
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - offset;
+//   const scrollToElement = (elementId, offset = 0) => {
+//     const element = document.getElementById(elementId);
+//     if (element) {
+//       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+//       const offsetPosition = elementPosition - offset;
       
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    } else {
-      // Fallback to regular scroll to top
-      scrollToTop();
-    }
-  };
+//       window.scrollTo({
+//         top: offsetPosition,
+//         behavior: 'smooth'
+//       });
+//     } else {
+//       // Fallback to regular scroll to top
+//       scrollToTop();
+//     }
+//   };
 
   // Run filtering whenever filters or products change
   useEffect(() => {
@@ -111,12 +153,12 @@ export default function AllProductsPage() {
     const sortedProducts = applySorting(filtered, sortBy);
     setFilteredProducts(sortedProducts);
 
-    // Scroll to top when filters change (except on initial load)
-    if (products.length > 0 && !isInitialLoad) {
-      // Use the enhanced scroll function
-      scrollToTop();
-      // Alternatively, you can use: scrollToElement('products-header', 80);
-    }
+    // // Scroll to top when filters change (except on initial load)
+    // if (products.length > 0 && !isInitialLoad) {
+    //   // Use the enhanced scroll function
+    //   scrollToTop();
+    //   // Alternatively, you can use: scrollToElement('products-header', 80);
+    // }
     
     // Mark initial load as complete after first filter application
     if (isInitialLoad) {
@@ -150,8 +192,8 @@ export default function AllProductsPage() {
   const handleSortChange = (e) => {
     const sortValue = e.target.value;
     setSortBy(sortValue);
-    // Scroll to top when sort changes
-    scrollToTop();
+    // // Scroll to top when sort changes
+    // scrollToTop();
   };
 
   const clearAllFilters = () => {
@@ -163,8 +205,8 @@ export default function AllProductsPage() {
       buildId: buildIdFromUrl
     });
     setSortBy("featured");
-    // Scroll to top when clearing filters
-    scrollToTop();
+    // // Scroll to top when clearing filters
+    // scrollToTop();
   };
 
   // Enhanced filter handler that includes scroll reset
@@ -212,7 +254,8 @@ export default function AllProductsPage() {
                 {filters.category === "All Products" ? "All Products" : filters.category}
               </h1>
               <p className="text-white opacity-80">
-                Showing {filteredProducts.length} of {products.length} products
+                Showing {products.length} products
+
               </p>
             </div>
 
@@ -259,13 +302,17 @@ export default function AllProductsPage() {
           )}
 
           {/* Load More / Pagination */}
-          {filteredProducts.length > 0 && (
+          {hasMore && (
             <div className="flex justify-center mt-12">
-              <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                Load More Products
-              </button>
+                <button
+                onClick={() => getProducts()}
+                disabled={loading}
+                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                {loading ? "Loading..." : "Load More Products"}
+                </button>
             </div>
-          )}
+            )}
 
           {/* Empty State */}
           {products.length > 0 && filteredProducts.length === 0 && (

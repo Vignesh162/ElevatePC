@@ -25,6 +25,36 @@ export const BuildProvider = ({ children }) => {
       }
     };
   };
+  const normalizeBuild = (build) => {
+    if (!build.components) return build;
+
+    const normalizedComponents = {};
+
+    // components can be array OR object → handle both
+    if (Array.isArray(build.components)) {
+        build.components.forEach((comp) => {
+        normalizedComponents[comp.category] = {
+            ...comp,
+            product_id: comp.product_id ?? comp.id
+        };
+        delete normalizedComponents[comp.category].id;
+        });
+    } else {
+        Object.entries(build.components).forEach(([category, comp]) => {
+        normalizedComponents[category] = {
+            ...comp,
+            product_id: comp.product_id ?? comp.id
+        };
+        delete normalizedComponents[category].id;
+        });
+    }
+
+    return {
+        ...build,
+        components: normalizedComponents
+    };
+    };
+
 
   // Load builds from API when token is available
   useEffect(() => {
@@ -44,18 +74,18 @@ export const BuildProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`${backendApiUrl}/builds/user`, getAuthConfig());
+      const response = await axios.get(`${backendApiUrl}/builds/me`, getAuthConfig());
       const buildsData = response.data;
-      
       if (buildsData && buildsData.length > 0) {
-        setBuilds(buildsData);
-        setCurrentBuildId(buildsData[0].id);
+        const normalizedBuilds = buildsData.map(normalizeBuild);
+        setBuilds(normalizedBuilds);
+        setCurrentBuildId(normalizedBuilds[0].id);
       } else {
         // Create a default build if user has none
         await createBuild({
           name: "My First Build",
           status: "draft",
-          components: []
+          components: {}
         });
       }
     } catch (err) {
@@ -94,7 +124,7 @@ export const BuildProvider = ({ children }) => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`${backendApiUrl}/builds/create`, buildData, getAuthConfig());
+      const response = await axios.post(`${backendApiUrl}/builds`, buildData, getAuthConfig());
       const newBuild = response.data;
       
       setBuilds(prev => [...prev, newBuild]);
@@ -135,7 +165,7 @@ export const BuildProvider = ({ children }) => {
     }
 
     try {
-      await axios.put(`${backendApiUrl}/builds/update/${buildId}`, { name }, getAuthConfig());
+      await axios.put(`${backendApiUrl}/builds/${buildId}`, { name }, getAuthConfig());
       setBuilds(prev => prev.map(b => b.id === buildId ? { ...b, name } : b));
     } catch (err) {
       console.error("Error updating build name:", err);
@@ -147,7 +177,7 @@ export const BuildProvider = ({ children }) => {
       throw err;
     }
   };
-
+  // todo 
   // Update build status via API
   const updateBuildStatus = async (buildId, status) => {
     if (!token) {
@@ -155,7 +185,7 @@ export const BuildProvider = ({ children }) => {
     }
 
     try {
-      await axios.put(`${backendApiUrl}/builds/update/${buildId}`, { status }, getAuthConfig());
+      await axios.put(`${backendApiUrl}/builds/${buildId}`, { status }, getAuthConfig());
       setBuilds(prev => prev.map(b => b.id === buildId ? { ...b, status } : b));
     } catch (err) {
       console.error("Error updating build status:", err);
@@ -167,7 +197,7 @@ export const BuildProvider = ({ children }) => {
       throw err;
     }
   };
-
+  // todo
   // Add product to build via API
   const addProductToBuild = async (buildId, product, category) => {
     if (!token) {
@@ -181,9 +211,8 @@ export const BuildProvider = ({ children }) => {
 
       // Update components array - remove existing component of same category
       const updatedComponents = currentBuild.components
-        ? currentBuild.components.filter(comp => comp.category !== category)
+        ? Object.values(currentBuild.components).filter(comp => comp.category !== category)
         : [];
-      
       // Add new component
       updatedComponents.push({
         product_id: product.id,
@@ -193,18 +222,17 @@ export const BuildProvider = ({ children }) => {
         images: product.images,
         brand: product.brand
       });
-
       // Update via API
       const response = await axios.put(
-        `${backendApiUrl}/builds/update/${buildId}`, 
+        `${backendApiUrl}/builds/${buildId}`, 
         { components: updatedComponents }, 
         getAuthConfig()
       );
-
+      console.log(response);
       // Update local state
       setBuilds(prev => prev.map(b => 
         b.id === buildId 
-          ? { ...b, components: updatedComponents }
+          ? { ...b, components: updatedComponents, compatibility:response.data.compatibility }
           : b
       ));
 
@@ -221,19 +249,6 @@ export const BuildProvider = ({ children }) => {
     }
   };
 
-  // Add product to current build or cart
-  const addProduct = async (category, product) => {
-    if (!token) {
-      throw new Error("Please login to add products");
-    }
-
-    if (currentBuildId) {
-      return await addProductToBuild(currentBuildId, product, category);
-    } else {
-      return await addProductToCart(product);
-    }
-  };
-
   // Add product to cart via API
   const addProductToCart = async (product, quantity = 1) => {
     if (!token) {
@@ -242,7 +257,7 @@ export const BuildProvider = ({ children }) => {
 
     try {
       await axios.post(
-        `${backendApiUrl}/cart/add`, 
+        `${backendApiUrl}/cart`, 
         {
           product_id: product.id,
           quantity: quantity
@@ -303,7 +318,7 @@ export const BuildProvider = ({ children }) => {
       }));
 
       await axios.put(
-        `${backendApiUrl}/cart/update`, 
+        `${backendApiUrl}/cart`, 
         { cartItems }, 
         getAuthConfig()
       );
@@ -327,7 +342,7 @@ export const BuildProvider = ({ children }) => {
 
     try {
       await axios.delete(
-        `${backendApiUrl}/cart/remove/${productId}`, 
+        `${backendApiUrl}/cart/${productId}`, 
         getAuthConfig()
       );
       setCart(prev => prev.filter(item => item.product_id !== productId));
@@ -351,7 +366,7 @@ export const BuildProvider = ({ children }) => {
     try {
       // Remove each item individually
       const deletePromises = cart.map(item => 
-        axios.delete(`${backendApiUrl}/cart/remove/${item.product_id}`, getAuthConfig())
+        axios.delete(`${backendApiUrl}/cart/${item.product_id}`, getAuthConfig())
       );
       await Promise.all(deletePromises);
       setCart([]);
@@ -374,7 +389,7 @@ export const BuildProvider = ({ children }) => {
 
     try {
       await axios.delete(
-        `${backendApiUrl}/builds/delete/${buildId}`, 
+        `${backendApiUrl}/builds/${buildId}`, 
         getAuthConfig()
       );
       
@@ -411,7 +426,7 @@ export const BuildProvider = ({ children }) => {
     const build = builds.find(b => b.id === buildId);
     if (!build || !build.components) return 0;
     
-    return build.components.reduce((total, component) => {
+    return Object.values(build.components).reduce((total, component) => {
       return total + (parseFloat(component.price) || 0);
     }, 0);
   };
@@ -441,7 +456,6 @@ export const BuildProvider = ({ children }) => {
     // Build actions
     setCurrentBuildId,
     addNewBuild,
-    addProduct,
     addProductToBuild,
     deleteBuild,
     updateBuildName,
