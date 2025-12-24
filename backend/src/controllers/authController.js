@@ -1,11 +1,14 @@
 import pool from "../config/db.js";
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken'; 
 
 export const register = async(req,res) => {
+    const { name, email, password } = req.body;
     try {
         // Check if user exists
         const existingUser = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
         if (existingUser.rows.length > 0) {
-        return res.status(400).json({ error: 'Email already registered' });
+        return res.status(409).json({ message:'Email already registered', error: 'ALREADY_REGISTERED_EMAIL' });
     }
 
     // Hash password
@@ -20,21 +23,31 @@ export const register = async(req,res) => {
     res.json(result.rows[0]);
   } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Registration failed' });
+        res.status(500).json({ error: 'Registration failed', message:"Registration Failed" });
   }
 };
 
 export const login = async (req,res) =>{
+    const { email, password } = req.body;
     try {
     // Fetch user
     const result = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
     const user = result.rows[0];
 
-    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
-
+    if (!user)  {
+      return res.status(401).json({ 
+        error: "AUTH_INVALID_CREDENTIALS",
+        message: "Invalid email or password"
+      });
+    }
     // Compare password
     const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!match) {
+      return res.status(401).json({
+        error: "AUTH_INVALID_CREDENTIALS",
+        message: "Invalid email or password"
+      });
+    }
 
     // Generate JWT
     const token = jwt.sign(
@@ -46,14 +59,14 @@ export const login = async (req,res) =>{
     res.json({ token });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ message:'Login Failed', error: 'LOGIN_ERROR' });
   }
 }
 
 export const getMe = async(req,res)=>{
     router.get('/me', async (req, res) => {
     const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'No token provided' });
+    if (!authHeader) return res.status(401).json({ error: 'TOKEN_MISSING',message: 'No token provided' });
 
     const token = authHeader.split(' ')[1];
 
@@ -64,7 +77,7 @@ export const getMe = async(req,res)=>{
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(401).json({ error: 'Invalid token' });
+        res.status(401).json({ error: 'INVALID_TOKEN' ,message: 'Invalid token' });
     }
     });
 }

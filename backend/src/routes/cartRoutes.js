@@ -1,6 +1,6 @@
 import express from "express";
 import pool from "../config/db.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
+import { authenticateToken } from "../middleware/auth.js";
 
 import { getCart,
   updateCart,
@@ -19,18 +19,18 @@ router.get("/", authenticateToken, getCart);
  * PUT /cart/:userId
  * Update entire cart
  */
-router.put("/update", authenticateToken, updateCart);
+router.put("/", authenticateToken, updateCart);
 
 /**
  * POST /cart/:userId/add
  * Add single product to cart
  */
-router.post("/add", authenticateToken, addCartItem );
+router.post("/", authenticateToken, addCartItem );
 
 /**
  * DELETE /cart/:userId/remove/:productId
  * Remove single product
  */
-router.delete("/remove/:productId", authenticateToken, removeCartItem );
+router.delete("/:productId", authenticateToken, removeCartItem );
 
 export default router;

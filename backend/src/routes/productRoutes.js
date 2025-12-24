@@ -1,7 +1,8 @@
 import express from 'express';
 import pool from '../config/db.js';
-import { authenticateToken, authorizeRoles } from '../middleware/authMiddleware.js';
-import { getAllProducts, getProductByID, addProduct } from '../controllers/productContoller.js';
+import { authenticateToken, authorizeRoles } from '../middleware/auth.js';
+import { getAllProducts, getProductByID, addProduct, deleteProduct, updateProduct } from '../controllers/productController.js';
+import { validateCreateProduct, validateUpdateProduct } from '../middleware/productValidation.js';
 const router = express.Router();
 
 // get all products
@@ -12,7 +13,12 @@ router.get("/:id", getProductByID);
 
 // admin routes
 // add product 
-router.post("/add",authenticateToken, authorizeRoles("admin"), addProduct);
-router.post("/update/:id",authenticateToken, authorizeRoles("admin"), addProduct);
-router.post("/delete/:id",authenticateToken, authorizeRoles("admin"), addProduct);
+router.post("/",authenticateToken, authorizeRoles("admin"), validateCreateProduct, addProduct);
+
+// update product 
+router.put("/:id",authenticateToken, authorizeRoles("admin"), validateUpdateProduct, updateProduct);
+
+// delete product
+router.delete("/:id",authenticateToken, authorizeRoles("admin"), deleteProduct);
+
 export default router;

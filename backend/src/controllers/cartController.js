@@ -1,9 +1,8 @@
 import pool from "../config/db.js";
-
 export const getCart = async (req, res) => {
     const userId = req.user.id;
     if (!userId || isNaN(userId)) {
-        return res.status(400).json({ error: "Invalid user ID" });
+        return res.status(400).json({ error: "INVALID_USER_ID", message:"Invalid user ID" });
     }
 
     try {
