@@ -1,7 +1,7 @@
 // contexts/AuthContext.js
 import { createContext, useState, useEffect } from "react";
 const backendApiURL = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:4000/api";
-
+console.log(backendApiURL);
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {

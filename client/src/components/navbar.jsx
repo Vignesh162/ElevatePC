@@ -101,7 +101,7 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center">
               <Link to="/LoginPage" className="text-lg text-gray-200 hover:text-blue-600 transition">
-                <button class="w-20 h-10 ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold  rounded-xl">Login</button>
+                <button className="w-20 h-10 ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold  rounded-xl">Login</button>
               </Link>
             </div>
           )}

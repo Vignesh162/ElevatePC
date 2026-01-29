@@ -339,7 +339,7 @@ export default function PcBuilderPage() {
                                         <div
                                             key={category}
                                             className="bg-gray-800 p-4 rounded flex justify-between items-center cursor-pointer"
-                                            onMouseEnter={() => setHoverCategory(category)}
+                                            onMouseEnter={() => setHoverCategory(category.trim().toLowerCase())}
                                             onMouseLeave={() => setHoverCategory(null)}
                                         >
                                             <span className="capitalize font-semibold">
@@ -352,7 +352,7 @@ export default function PcBuilderPage() {
                                                     className="px-4 py-2 m-2 bg-red-600 hover:bg-red-700 rounded"
                                                     onClick={() => handleDelete(category)}
                                                 >
-                                                    Delete
+                                                    Remove
                                                 </button>}
                                                 <button
                                                     className="px-4 py-2 m-2 bg-blue-600 hover:bg-blue-700 rounded"

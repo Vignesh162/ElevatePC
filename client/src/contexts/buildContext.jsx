@@ -165,7 +165,7 @@ export const BuildProvider = ({ children }) => {
     }
 
     try {
-      await axios.put(`${backendApiUrl}/builds/${buildId}`, { name }, getAuthConfig());
+      await axios.patch(`${backendApiUrl}/builds/${buildId}`, { name }, getAuthConfig());
       setBuilds(prev => prev.map(b => b.id === buildId ? { ...b, name } : b));
     } catch (err) {
       console.error("Error updating build name:", err);
@@ -185,7 +185,7 @@ export const BuildProvider = ({ children }) => {
     }
 
     try {
-      await axios.put(`${backendApiUrl}/builds/${buildId}`, { status }, getAuthConfig());
+      await axios.patch(`${backendApiUrl}/builds/${buildId}`, { status }, getAuthConfig());
       setBuilds(prev => prev.map(b => b.id === buildId ? { ...b, status } : b));
     } catch (err) {
       console.error("Error updating build status:", err);
@@ -248,6 +248,46 @@ export const BuildProvider = ({ children }) => {
       throw err;
     }
   };
+//   const removeProductFromBuild = async (buildId, product, category) => {
+//     if (!token) {
+//       throw new Error("Authentication required");
+//     }
+
+//     try {
+//       // Get current build
+//       const currentBuild = builds.find(b => b.id === buildId);
+//       if (!currentBuild) throw new Error("Build not found");
+
+//       // Update components array - remove existing component of same category
+//       const updatedComponents = currentBuild.components
+//         ? Object.values(currentBuild.components).filter(comp => comp.category !== category)
+//         : [];
+//       // Update via API
+//       const response = await axios.put(
+//         `${backendApiUrl}/builds/${buildId}`, 
+//         { components: updatedComponents }, 
+//         getAuthConfig()
+//       );
+//       console.log(response);
+//       // Update local state
+//       setBuilds(prev => prev.map(b => 
+//         b.id === buildId 
+//           ? { ...b, components: updatedComponents, compatibility:response.data.compatibility }
+//           : b
+//       ));
+
+//       return response.data;
+//     } catch (err) {
+//       console.error("Error removing product from build:", err);
+//       console.error("Error details:", err.response?.data);
+//       if (err.response?.status === 401) {
+//         setError("Authentication failed. Please login again.");
+//       } else {
+//         setError("Failed to remove product from build");
+//       }
+//       throw err;
+//     }
+//   };
 
   // Add product to cart via API
   const addProductToCart = async (product, quantity = 1) => {
