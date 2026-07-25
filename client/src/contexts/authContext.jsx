@@ -134,7 +134,7 @@ export function AuthProvider({ children }) {
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Register failed");
+        throw new Error(errorData.message || "Registeration failed");
       }
       
       const data = await res.json();
