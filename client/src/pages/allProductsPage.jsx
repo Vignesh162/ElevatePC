@@ -1,200 +1,111 @@
 // pages/AllProductsPage.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import ProductCard from "../components/productCard";
 import ProductSidebar from "../components/productSidebar";
 import axios from "axios";
 
+const LIMIT = 20;
+
 export default function AllProductsPage() {
-  const LIMIT = 20;
-  const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
   const [sortBy, setSortBy] = useState("featured");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  
-  const backendApiUrl = import.meta.env.BACKEND_API_URL || "http://localhost:4000/api";
+
+  const backendApiUrl = import.meta.env.VITE_BACKEND_API_URL || "http://localhost:4000/api";
   const location = useLocation();
-  
+
   const queryParams = new URLSearchParams(location.search);
   const categoryFromUrl = queryParams.get("category") || "All Products";
   const buildIdFromUrl = queryParams.get("buildId") || null;
+  const [isIntialLoad, setIsInitialLoad] = useState(true);
+  const loaderRef = useRef(null);
+  const offsetRef = useRef(0);
+  const isFetchingRef = useRef(false);
+  const getProductsRef = useRef(null);
 
-  // Master filter state
   const [filters, setFilters] = useState({
     priceRange: [0, 150000],
     brands: [],
     connections: [],
     category: categoryFromUrl,
-    buildId: buildIdFromUrl
+    buildId: buildIdFromUrl,
   });
- 
-  // Track if it's the initial load to prevent scroll on first render
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Fetch products
-  useEffect(() => {
-     getProducts(true);
-  }, []);
-    // When category / filters change, reset pagination:
-    useEffect(() => {
-    setOffset(0);
-    setHasMore(true);
-    getProducts(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    }, [filters.category, sortBy]);
-//   const getProducts = async (reset=false) => {
-//     try {
-//       const response = await axios.get(`${backendApiUrl}/products?limit=20`);
-//       const productsData = response.data.products || response.data || [];
-//       console.log(productsData);
-//       if (productsData.length > 0) {
-//         setProducts(productsData);
-//         setFilteredProducts(productsData);
-//       }
-//     } catch (err) {
-//       console.error("Error fetching products:", err);
-//     }
-//   };
-    const getProducts = async (reset = false) => {
-    if (loading) return;
+  const getProducts = async (reset = false) => {
+    if (isFetchingRef.current || (!hasMore && !reset)) return;
 
     try {
-        setLoading(true);
+      isFetchingRef.current = true;
+      setLoading(true);
 
-        const response = await axios.get(`${backendApiUrl}/products`, {
+      const currentOffset = reset ? 0 : offsetRef.current;
+
+      const response = await axios.get(`${backendApiUrl}/products`, {
         params: {
-            limit: LIMIT,
-            offset: reset ? 0 : offset,
-            category: filters.category !== "All Products" ? filters.category : undefined
-        }
-        });
+          limit: LIMIT,
+          offset: currentOffset,
+          category: filters.category !== "All Products" ? filters.category : undefined,
+        },
+      });
 
-        const { products: newProducts, meta } = response.data;
+      const { products: newProducts, meta } = response.data;
 
-        setProducts(prev =>
-        reset ? newProducts : [...prev, ...newProducts]
-        );
+      setProducts((prev) => {
+        if (reset) return newProducts;
+        const existingIds = new Set(prev.map((p) => p.id));
+        const uniqueNewProducts = newProducts.filter((p) => !existingIds.has(p.id));
+        return [...prev, ...uniqueNewProducts];
+      });
 
-        setFilteredProducts(prev =>
-        reset ? newProducts : [...prev, ...newProducts]
-        );
-
-        setOffset(prev => prev + LIMIT);
-        setHasMore(meta.hasMore);
-    } catch (err) {
-        console.error("Error fetching products:", err);
-    } finally {
-        setLoading(false);
-    }
-    };
-  // Enhanced scroll to top function
-  const scrollToTop = () => {
-    // Get the header element to account for fixed headers
-    const header = document.querySelector('header, [class*="header"], [class*="Header"]');
-    const headerHeight = header ? header.offsetHeight : 0;
-    
-    // Calculate scroll position with offset for header
-    const scrollPosition = Math.max(0, headerHeight - 10); // Small buffer
-    
-    window.scrollTo({
-      top: scrollPosition,
-      behavior: 'smooth'
-    });
-  };
-
-  // Alternative: Scroll to a specific element by ID
-//   const scrollToElement = (elementId, offset = 0) => {
-//     const element = document.getElementById(elementId);
-//     if (element) {
-//       const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-//       const offsetPosition = elementPosition - offset;
-      
-//       window.scrollTo({
-//         top: offsetPosition,
-//         behavior: 'smooth'
-//       });
-//     } else {
-//       // Fallback to regular scroll to top
-//       scrollToTop();
-//     }
-//   };
-
-  // Run filtering whenever filters or products change
-  useEffect(() => {
-    if (products.length === 0) return;
-
-    let filtered = [...products];
-
-    // Category filter
-    if (filters.category && filters.category !== "All Products") {
-      filtered = filtered.filter(
-        (p) => p.category?.toLowerCase() === filters.category.toLowerCase()
-      );
-    }
-
-    // Brand filter
-    if (filters.brands.length > 0) {
-      filtered = filtered.filter((p) => 
-        p.brand && filters.brands.includes(p.brand)
-      );
-    }
-
-    // Price filter - convert price to number for comparison
-    filtered = filtered.filter((p) => {
-      const price = parseFloat(p.price) || 0;
-      return price >= filters.priceRange[0] && price <= filters.priceRange[1];
-    });
-
-    // Apply sorting to the filtered results
-    const sortedProducts = applySorting(filtered, sortBy);
-    setFilteredProducts(sortedProducts);
-
-    // // Scroll to top when filters change (except on initial load)
-    // if (products.length > 0 && !isInitialLoad) {
-    //   // Use the enhanced scroll function
-    //   scrollToTop();
-    //   // Alternatively, you can use: scrollToElement('products-header', 80);
-    // }
-    
-    // Mark initial load as complete after first filter application
-    if (isInitialLoad) {
+      offsetRef.current = reset ? LIMIT : offsetRef.current + LIMIT;
+      setHasMore(meta.hasMore);
       setIsInitialLoad(false);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    } finally {
+      isFetchingRef.current = false;
+      setLoading(false);
     }
-  }, [filters, products, sortBy]);
+  };
 
-  // Separate sorting function
-  const applySorting = (productsToSort, sortMethod) => {
-    return [...productsToSort].sort((a, b) => {
-      const priceA = parseFloat(a.price) || 0;
-      const priceB = parseFloat(b.price) || 0;
-      const ratingA = parseFloat(a.rating) || 0;
-      const ratingB = parseFloat(b.rating) || 0;
+  // Keep ref always pointing to latest getProducts
+  getProductsRef.current = getProducts;
 
-      switch (sortMethod) {
-        case "price-low":
-          return priceA - priceB;
-        case "price-high":
-          return priceB - priceA;
-        case "rating":
-          return ratingB - ratingA;
-        case "newest":
-          return b.id - a.id;
-        default:
-          return 0; // featured - no sorting
+  // When filters/sort change, reset and refetch
+  useEffect(() => {
+    setHasMore(true);
+    offsetRef.current = 0;
+    getProductsRef.current(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [filters.category, filters.brands, filters.priceRange[0], filters.priceRange[1], sortBy]);
+
+  // Intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasMore && !loading) {
+          getProductsRef.current();
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0,
       }
-    });
-  };
+    );
 
-  const handleSortChange = (e) => {
-    const sortValue = e.target.value;
-    setSortBy(sortValue);
-    // // Scroll to top when sort changes
-    // scrollToTop();
-  };
+    if (loaderRef.current) observer.observe(loaderRef.current);
+
+    return () => {
+      if (loaderRef.current) observer.unobserve(loaderRef.current);
+    };
+  }, [hasMore, loading]);
+
+  const handleSortChange = (e) => setSortBy(e.target.value);
 
   const clearAllFilters = () => {
     setFilters({
@@ -202,17 +113,13 @@ export default function AllProductsPage() {
       brands: [],
       connections: [],
       category: "All Products",
-      buildId: buildIdFromUrl
+      buildId: buildIdFromUrl,
     });
     setSortBy("featured");
-    // // Scroll to top when clearing filters
-    // scrollToTop();
   };
 
-  // Enhanced filter handler that includes scroll reset
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    // Close mobile filters when a filter is applied
     setShowMobileFilters(false);
   };
 
@@ -221,21 +128,16 @@ export default function AllProductsPage() {
       <div className="flex">
         {/* Sidebar - Desktop */}
         <div className="hidden lg:block w-80 flex-shrink-0">
-          <ProductSidebar 
-            filters={filters} 
-            setFilters={handleFilterChange} 
-          />
+          <ProductSidebar filters={filters} setFilters={handleFilterChange} />
         </div>
 
         {/* Mobile Filters Overlay */}
         {showMobileFilters && (
           <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50">
             <div className="absolute left-0 top-0 h-full w-80 bg-white overflow-y-auto">
-              <ProductSidebar 
-                filters={filters} 
-                setFilters={handleFilterChange} 
-              />
+              <ProductSidebar filters={filters} setFilters={handleFilterChange} />
               <button
+                aria-label="Close filters"
                 onClick={() => setShowMobileFilters(false)}
                 className="absolute top-4 right-4 text-black hover:text-blue-700"
               >
@@ -247,7 +149,7 @@ export default function AllProductsPage() {
 
         {/* Main Content */}
         <div className="flex-1 p-6">
-          {/* Header with title and sort options - Added ID for targeted scrolling */}
+          {/* Header */}
           <div id="products-header" className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">
@@ -255,7 +157,6 @@ export default function AllProductsPage() {
               </h1>
               <p className="text-white opacity-80">
                 Showing {products.length} products
-
               </p>
             </div>
 
@@ -288,34 +189,35 @@ export default function AllProductsPage() {
           {/* Products Grid */}
           {products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="text-gray-400 text-6xl mb-4">⏳</div>
-              <h3 className="text-2xl font-semibold text-gray-200 mb-3">
-                Loading products...
-              </h3>
+          ) : 
+          (
+            loading && (
+              <div className="text-center py-16">
+                <div className="text-gray-400 text-6xl mb-4">⏳</div>
+                <h3 className="text-2xl font-semibold text-gray-200 mb-3">
+                  Loading products...
+                </h3>
+              </div>
+            )
+          )}
+
+          {/* Infinite scroll trigger */}
+          {hasMore && !isIntialLoad && (
+            <div ref={loaderRef} className="flex justify-center mt-12 py-10">
+              {loading && (
+                <div className="text-gray-400 text-lg animate-pulse">
+                  Loading more products...
+                </div>
+              )}
             </div>
           )}
 
-          {/* Load More / Pagination */}
-          {hasMore && (
-            <div className="flex justify-center mt-12">
-                <button
-                onClick={() => getProducts()}
-                disabled={loading}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                >
-                {loading ? "Loading..." : "Load More Products"}
-                </button>
-            </div>
-            )}
-
           {/* Empty State */}
-          {products.length > 0 && filteredProducts.length === 0 && (
+          {products.length === 0 && !loading && (
             <div className="text-center py-16">
               <div className="text-gray-400 text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-semibold text-gray-200 mb-3">
