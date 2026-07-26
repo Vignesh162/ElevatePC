@@ -16,8 +16,8 @@ export const getAllProducts = async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const offset = parseInt(req.query.offset) || 0;
 
-    const { category, brands, prices, sortBy, order } = req.query;
-
+    const { category, brands, minPrice, maxPrice, sortBy, order, connections } = req.query;
+    console.log(req.query);
     const conditions = [];
     const values = [];
     let index = 1;
@@ -29,17 +29,25 @@ export const getAllProducts = async (req, res) => {
     }
 
     // Brand filter
-    if (brands && brands.length > 0) {
-      conditions.push(`brand = ANY($${index++})`);
-      values.push(brands);
+    if (brands) {
+        const brandsArray = brands.split(",");
+        conditions.push(`brand = ANY($${index++})`);
+        values.push(brandsArray);
+    }
+
+    // connections filter
+    if (connections) {
+        const connectionsArray = connections.split(",");
+        conditions.push(`connection_type = ANY($${index++})`);
+        values.push(connectionsArray);
     }
 
     // Price filter
-    if (prices && prices.length === 2) {
+    if (minPrice || maxPrice) {
       conditions.push(`price BETWEEN $${index++} AND $${index++}`);
-      values.push(prices[0]);
-      values.push(prices[1]);
-    }
+      values.push(minPrice);
+      values.push(maxPrice);
+    }  
 
     const whereClause = 
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
