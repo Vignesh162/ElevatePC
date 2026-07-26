@@ -39,6 +39,7 @@ export default function AllProductsPage() {
         "rating":     { sortBy: "rating", order: "desc" },
         "newest":     { sortBy: "created_at", order: "desc" },
         "featured":   { sortBy: "created_at", order: "desc" }, // or whatever "featured" means for you
+        "name":       { sortBy: "name", order: "asc"},
     };   
 
   const getProducts = async (reset = false) => {
@@ -187,6 +188,7 @@ export default function AllProductsPage() {
                 <option value="price-high">Price: High to Low</option>
                 <option value="rating">Highest Rated</option>
                 <option value="newest">Newest</option>
+                <option value="name">Name</option>
               </select>
             </div>
           </div>
