@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function ProductSidebar({ filters, setFilters }) {
+export default function ProductSidebar({ filters, onFilterChange }) {
   const [expandedSections, setExpandedSections] = useState({
     brands: false,
     connectionType: false
@@ -49,7 +49,7 @@ export default function ProductSidebar({ filters, setFilters }) {
 
   // Brand filter - automatically applies when changed
   const handleBrandToggle = (brand) => {
-    setFilters((prev) => ({
+    onFilterChange((prev) => ({
       ...prev,
       brands: prev.brands.includes(brand)
         ? prev.brands.filter((b) => b !== brand)
@@ -59,7 +59,7 @@ export default function ProductSidebar({ filters, setFilters }) {
 
   // Connection filter - automatically applies when changed
   const handleConnectionToggle = (connection) => {
-    setFilters((prev) => ({
+    onFilterChange((prev) => ({
       ...prev,
       connections: prev.connections.includes(connection)
         ? prev.connections.filter((c) => c !== connection)
@@ -69,7 +69,7 @@ export default function ProductSidebar({ filters, setFilters }) {
 
   // Category filter - automatically applies when changed
   const handleCategoryChange = (category) => {
-    setFilters((prev) => ({ ...prev, category }));
+    onFilterChange((prev) => ({ ...prev, category }));
   };
 
   // Price range - automatically applies when changed
@@ -79,15 +79,15 @@ export default function ProductSidebar({ filters, setFilters }) {
 
     // Prevent min > max
     if (index === 0 && newRange[0] <= filters.priceRange[1]) {
-      setFilters((prev) => ({ ...prev, priceRange: newRange }));
+      onFilterChange((prev) => ({ ...prev, priceRange: newRange }));
     } else if (index === 1 && newRange[1] >= filters.priceRange[0]) {
-      setFilters((prev) => ({ ...prev, priceRange: newRange }));
+      onFilterChange((prev) => ({ ...prev, priceRange: newRange }));
     }
   };
 
   // Clear all filters
   const handleClearAll = () => {
-    setFilters({
+    onFilterChange({
       priceRange: [0, 150000],
       brands: [],
       connections: [],

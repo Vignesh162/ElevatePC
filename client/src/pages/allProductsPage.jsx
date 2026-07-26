@@ -33,6 +33,13 @@ export default function AllProductsPage() {
     category: categoryFromUrl,
     buildId: buildIdFromUrl,
   });
+    const sortMap = {
+        "price-low":  { sortBy: "price", order: "asc" },
+        "price-high": { sortBy: "price", order: "desc" },
+        "rating":     { sortBy: "rating", order: "desc" },
+        "newest":     { sortBy: "created_at", order: "desc" },
+        "featured":   { sortBy: "created_at", order: "desc" }, // or whatever "featured" means for you
+    };   
 
   const getProducts = async (reset = false) => {
     if (isFetchingRef.current || (!hasMore && !reset)) return;
@@ -43,11 +50,19 @@ export default function AllProductsPage() {
 
       const currentOffset = reset ? 0 : offsetRef.current;
 
+      const { sortBy: sortField, order } = sortMap[sortBy] || sortMap.featured;
+      console.log(filters);
       const response = await axios.get(`${backendApiUrl}/products`, {
         params: {
           limit: LIMIT,
           offset: currentOffset,
           category: filters.category !== "All Products" ? filters.category : undefined,
+          brands: filters.brands.length ? filters.brands.join(",") : undefined,
+          connections: filters.connections.length ? filters.connections.join(",") : undefined,
+          minPrice:filters.priceRange[0],
+          maxPrice:filters.priceRange[1],
+          sortBy: sortField,
+          order 
         },
       });
 
@@ -80,7 +95,7 @@ export default function AllProductsPage() {
     offsetRef.current = 0;
     getProductsRef.current(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [filters.category, filters.brands, filters.priceRange[0], filters.priceRange[1], sortBy]);
+  }, [filters.category, filters.brands, filters.priceRange[0], filters.priceRange[1], filters.connections, sortBy]);
 
   // Intersection observer for infinite scroll
   useEffect(() => {
@@ -128,7 +143,7 @@ export default function AllProductsPage() {
       <div className="flex">
         {/* Sidebar - Desktop */}
         <div className="hidden lg:block w-80 flex-shrink-0">
-          <ProductSidebar filters={filters} setFilters={handleFilterChange} />
+          <ProductSidebar filters={filters} onFilterChange={handleFilterChange} />
         </div>
 
         {/* Mobile Filters Overlay */}

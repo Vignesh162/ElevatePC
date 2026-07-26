@@ -16,30 +16,52 @@ export const getAllProducts = async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const offset = parseInt(req.query.offset) || 0;
 
-    const { category, brand } = req.query;
+    const { category, brands, prices, sortBy, order } = req.query;
 
     const conditions = [];
     const values = [];
     let index = 1;
 
+    // Category filter
     if (category) {
       conditions.push(`category = $${index++}`);
       values.push(category);
     }
 
-    if (brand) {
-      conditions.push(`brand = $${index++}`);
-      values.push(brand);
+    // Brand filter
+    if (brands && brands.length > 0) {
+      conditions.push(`brand = ANY($${index++})`);
+      values.push(brands);
     }
 
-    const whereClause =
+    // Price filter
+    if (prices && prices.length === 2) {
+      conditions.push(`price BETWEEN $${index++} AND $${index++}`);
+      values.push(prices[0]);
+      values.push(prices[1]);
+    }
+
+    const whereClause = 
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
+    // Sorting (safe whitelist)
+    const allowedSortFields = ["price", "rating", "created_at", "name"];
+
+    const formattedSortBy = allowedSortFields.includes(sortBy)
+      ? sortBy
+      : "created_at";
+
+    const formattedOrder =
+      order && order.toLowerCase() === "asc" ? "ASC" : "DESC";
+
+    const orderByClause = `ORDER BY ${formattedSortBy} ${formattedOrder}`;
+
+    // Product query
     const productsQuery = `
       SELECT *
       FROM products
       ${whereClause}
-      ORDER BY created_at DESC
+      ${orderByClause}
       LIMIT $${index++}
       OFFSET $${index}
     `;
@@ -48,6 +70,7 @@ export const getAllProducts = async (req, res) => {
 
     const productsResult = await pool.query(productsQuery, values);
 
+    // Count query
     const countQuery = `
       SELECT COUNT(*) AS total
       FROM products
@@ -59,15 +82,18 @@ export const getAllProducts = async (req, res) => {
       values.slice(0, values.length - 2)
     );
 
+    const total = parseInt(countResult.rows[0].total);
+
     res.status(200).json({
       meta: {
         limit,
         offset,
-        total: parseInt(countResult.rows[0].total),
-        hasMore: offset + limit < countResult.rows[0].total
+        total,
+        hasMore: offset + limit < total
       },
       products: productsResult.rows
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
